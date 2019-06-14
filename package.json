@@ -1,0 +1,19 @@
+{
+  "name": "gps",
+  "version": "1.0.0",
+  "description": "gps server",
+  "main": "server.js",
+  "dependencies": {
+    "echarts": "^4.2.1",
+    "express": "^4.17.1",
+    "jquery": "^3.4.1",
+    "mysql": "^2.17.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

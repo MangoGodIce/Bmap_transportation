@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <script src="node_modules/jquery/dist/jquery.js"></script>
+    <script>
+        var list;
+        var url1 = "http://10.90.75.206:8081/";
+        var url2 = "http://127.0.0.1:8081/";
+    </script>
+
+    <style type="text/css">
+        body,
+        html {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+        }
+        
+        #allmap {
+            width: 100%;
+            height: 100%
+        }
+        
+        p {
+            margin-left: 5px;
+            font-size: 14px;
+        }
+    </style>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=6veFsvElqaHgqrDC7dVKgzzCm9E6pAeI"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/library/TextIconOverlay/1.2/src/TextIconOverlay_min.js"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/library/MarkerClusterer/1.2/src/MarkerClusterer_min.js"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/library/AreaRestriction/1.2/src/AreaRestriction_min.js"></script>
+    <script type="text/javascript" src="http://lbsyun.baidu.com/jsdemo/data/points-sample-data.js"></script>
+    <title>点聚合</title>
+</head>
+
+<body>
+    <div id="allmap"></div>
+
+</body>
+
+</html>
+<script type="text/javascript">
+    var timeset = 1;
+    var datatest = {
+        "time": timeset
+    }
+    getdata(datatest);
+    // 百度地图API功能
+    var map = new BMap.Map("allmap", {}); // 创建Map实例
+    map.centerAndZoom(new BMap.Point(104.040, 30.470), 10); // 初始化地图,设置中心点坐标和地图级别
+    map.enableScrollWheelZoom(); //启用滚轮放大缩小
+    var b = new BMap.Bounds(new BMap.Point(103.900, 30.360), new BMap.Point(104.150, 30.580)); // 范围 左下角，右上角的点位置
+    try { // js中尽然还有try catch方法，可以避免bug引起的错误
+        BMapLib.AreaRestriction.setBounds(map, b); // 已map为中心，已b为范围的地图
+    } catch (e) {
+        // 捕获错误异常
+        alert(e);
+    }
+    map.addControl(new BMap.ScaleControl({
+        anchor: BMAP_ANCHOR_TOP_LEFT
+    }));
+    map.addControl(new BMap.NavigationControl({
+        type: BMAP_NAVIGATION_CONTROL_ZOOM
+    }, {
+        anchor: BMAP_ANCHOR_TOP_LEFT
+    }));
+
+    //生成一个marker数组，然后调用markerClusterer类即可。
+    if (document.createElement('canvas').getContext) { // 判断当前浏览器是否支持绘制海量点
+
+        function getdata(para) {
+            var temp;
+            $.ajax({
+                url: url2 + "iji",
+                method: "POST",
+                crossDomain: true,
+                data: para,
+                // xhrFields: {
+                //     withCredentials: true
+                // },
+                success: function(data1) {
+                    if (data != null) {
+                        console.log("Success");
+                        //console.log(data);
+                        datatest.time = datatest.time + 1;
+                        var markers1 = [];
+
+                        function a1(data1) {
+                            for (var i = 0; i < data1.length; i++) {
+                                var pt1 = new BMap.Point(data1[i][0], data1[i][1]);
+                                markers1.push(new BMap.Marker(pt1));
+                            }
+                            map.removeOverlay(pointCollection);
+                            markerClusterer1.clearMarkers();
+                            markerClusterer1 = new BMapLib.MarkerClusterer(map, {
+                                markers: markers1
+                            })
+                        }
+                        a1(data1);
+                    }
+                },
+                error: function(data) {
+                    console.log("Default");
+                    console.log(data);
+                }
+            })
+        }
+        var markers = [];
+        var pt = null; // 添加海量点数据
+        for (var i = 0; i < data.data.length; i++) {
+            pt = new BMap.Point(data.data[i][0], data.data[i][1]);
+            markers.push(new BMap.Marker(pt));
+        }
+        var options = {
+                size: BMAP_POINT_SIZE_SMALL,
+                shape: BMAP_POINT_SHAPE_CIRCLE,
+                color: '#d340c3'
+            }
+            // Polyline(points: Array<Point>, opts: PolylineOptions)
+        var pointCollection = new BMap.PointCollection(markers, options); // 初始化PointCollection
+        pointCollection.addEventListener('click', function(e) {
+            alert('单击点的坐标为：' + e.point.lng + ',' + e.point.lat); // 监听点击事件
+        });
+        map.addOverlay(pointCollection); // 添加Overlay
+        var markerClusterer1 = new BMapLib.MarkerClusterer(map, {
+            markers: 0
+        });
+        var flag = 0;
+
+        setInterval(function() {
+            getdata(datatest);
+        }, 3000)
+
+    } else {
+        alert('请在chrome、safari、IE8+以上浏览器查看本示例');
+    }
+</script>
